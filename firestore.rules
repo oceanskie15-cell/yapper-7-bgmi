@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    // Put the same admin Gmail(s) as in firebase-config.js
+    function admin() {
+      return signedIn() && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() in ['rishabhmanik14@gmail.com'];
+    }
+    match /profiles/{id} {
+      allow read: if signedIn();
+      allow write: if signedIn() && (request.auth.uid == id || admin());
+    }
+    match /joins/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if signedIn() && (resource.data.uid == request.auth.uid || admin());
+    }
+    match /topups/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if admin();
+    }
+    // tournaments, creds, results, reviews, config
+    match /{col}/{id} {
+      allow read: if signedIn();
+      allow write: if admin();
+    }
+  }
+}
