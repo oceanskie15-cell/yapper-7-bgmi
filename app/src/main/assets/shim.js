@@ -29,8 +29,7 @@
     $("yper").textContent=map[m]||m}
   function wire(){
     var ev=$("ypv");
-    ev.onmousedown=ev.ontouchstart=function(e){e.preventDefault()};
-    ev.onclick=function(){var f=$("ypp"),show=f.type==="password";f.type=show?"text":"password";ev.textContent=show?"Hide":"Show";f.focus()};
+    ev.onclick=function(e){e.preventDefault();var f=$("ypp"),show=f.type==="password";f.type=show?"text":"password";ev.textContent=show?"Hide":"Show"};
     $("ypg").onclick=function(){$("yper").textContent="";
       if(window.Android&&Android.googleSignIn)Android.googleSignIn(C.googleWebClientId);
       else auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err)};
