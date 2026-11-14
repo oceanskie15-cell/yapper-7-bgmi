@@ -571,7 +571,7 @@ function balCard(){const fx="display:flex;justify-content:space-between;align-it
 function home(){const me=S.prof[uid];
   const ups=S.t.filter(t=>st(t)==="up").sort((a,b)=>new Date(a.when||0)-new Date(b.when||0)),live=S.t.filter(t=>st(t)==="live"),hero=live[0]||ups[0]||S.t[0];
   const rl=live.filter(t=>t!==hero),ru=ups.filter(t=>t!==hero);
-  let h=`<div class="top"><h1 class="logo">👑 YAPPER</h1><div class="hdr">${themeBtn()}${roleBtn()}</div></div><div class="hrow"><p class="mu hwho">${me?avH(me,"sm")+'<span class="hnm">Hi, '+esc(me.ign)+' 👋</span>':"Welcome 👋"}</p>${balCard()}</div>`;
+  let h=`<div class="top"><h1 class="logo">👑 YAPPER</h1><div class="hdr">${themeBtn()}${roleBtn()}</div></div><div class="hrow"><div class="mu hwho">${me?avH(me,"sm")+'<span class="hnm">Hi, '+esc(me.ign)+' 👋</span>':"Welcome 👋"}</div>${balCard()}</div>`;
   h+=hero?tCard(hero,{feat:true}):'<p class="mu">No tournaments yet.</p>';
   if(rl.length)h+=`<div class="sh"><h2>${IC.clock}Live now</h2></div>`+rl.map(t=>tCard(t)).join("");
   if(ru.length)h+=`<div class="sh"><h2>${IC.clock}Upcoming</h2><button class="va" onclick="go('matches')">View All ${IC.arrow}</button></div>`+ru.slice(0,3).map(t=>tCard(t)).join("");
