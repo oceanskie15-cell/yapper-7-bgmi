@@ -436,6 +436,35 @@ html[data-mode="light"] .tx.out .txa b{color:#c62828}
 .hrow .hwho .av{margin:0!important;flex:none!important}
 .hrow .hnm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
 .hrow .hbal{flex:none!important;margin:0 0 0 auto!important;text-align:right!important;white-space:nowrap}
+
+/* ---- home stage ---- */
+#scr.nos{overflow:hidden!important;display:flex;flex-direction:column}
+.hm{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+.hm .top{margin-bottom:10px}.hm .hrow{margin-bottom:0}
+.stage{position:relative;flex:1 1 auto;min-height:110px;margin:0}
+.chrw{position:absolute;left:50%;top:-2%;bottom:-5%;width:92%;max-width:400px;transform:translateX(-50%);display:flex;align-items:flex-end;justify-content:center;z-index:2}
+.chrw .chr{position:relative;height:100%;width:auto;max-width:100%;filter:drop-shadow(0 10px 18px rgba(0,0,0,.55));animation:chrf 3.6s ease-in-out infinite}
+.chr3d{position:relative;width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center}.chr3d canvas{position:absolute;inset:0;width:100%!important;height:100%!important;z-index:1;touch-action:none;cursor:grab}
+.chrw .pad{position:absolute;left:-8%;right:-8%;bottom:6%;height:46%;border-radius:14px;background:linear-gradient(160deg,rgba(94,234,212,.35),rgba(30,120,110,.18));transform:skewX(-8deg);box-shadow:0 0 30px rgba(94,234,212,.25)}
+@keyframes chrf{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.sd{position:absolute;z-index:3}
+.sl1{left:0;top:6%}.sl2{left:0;top:44%}.sr1{right:0;top:6%}.sr2{right:0;top:44%}
+.slot{width:62px;height:62px;border-radius:16px;border:1px solid var(--bd);background:var(--card);box-shadow:0 8px 24px rgba(0,0,0,.25);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--mu)}
+.slot.wins small{font-size:11px;color:var(--ac);font-weight:700;letter-spacing:.3px}
+.slot.wins b{font-size:22px;color:var(--tx);line-height:1.1}
+.slot.lock{opacity:.8}
+.pname{text-align:center;font-weight:700;font-style:italic;margin-top:2px;color:var(--tx)}
+.plvl{display:flex;align-items:center;justify-content:center;gap:0;margin:6px auto 0;width:60%}
+.plvl i{font-style:normal;font-weight:700;font-size:12px;min-width:26px;text-align:center;padding:2px 6px;background:rgba(94,234,212,.22);color:var(--tx);transform:skewX(-12deg)}
+.plvl span{flex:1;height:4px;background:rgba(255,255,255,.14);border-radius:2px;overflow:hidden}
+.plvl em{display:block;height:100%;background:var(--ac)}
+.bpn{text-align:center;margin:4px 0 0;line-height:1}
+.bpn b{font-size:34px;color:#ffd43b;font-weight:800}
+.bpn sup{font-size:15px;color:#ffd43b;font-weight:700;margin-left:2px}
+.jwrap{position:relative;display:flex;justify-content:flex-end;margin:10px 0 2px}
+.join{display:block;width:auto;min-width:132px;padding:12px 30px;border:0;border-radius:99px;background:linear-gradient(90deg,#FFD65A,#F5B82E);color:#120d00;font-size:16px;font-weight:800;font-style:italic;letter-spacing:.3px;box-shadow:0 6px 20px rgba(245,184,46,.38);cursor:pointer}
+html[data-mode="light"] .join{background:linear-gradient(90deg,#F2B632,#D9970B);color:#fff;box-shadow:0 6px 18px rgba(217,151,11,.35)}
+.join:active{transform:scale(.98)}
 </style>
 <div id="phone">
 <div id="scr"><p class="mu">Loading…</p></div>
@@ -448,6 +477,9 @@ html[data-mode="light"] .tx.out .txa b{color:#c62828}
 <script src="firebase-config.js"></script>
 <script src="shim.js"></script>
 <script src="qrcode.min.js"></script>
+<script src="three.min.js"></script>
+<script src="GLTFLoader.js"></script>
+<script src="model-data.js"></script>
 <script>
 const $=s=>document.querySelector(s);
 const ic=(p,z=20)=>`<svg viewBox="0 0 24 24" width="${z}" height="${z}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
@@ -568,14 +600,89 @@ const roleBtn=()=>isAdmin?`<button class="rp" onclick="asPlayer=!asPlayer;render
 function balCard(){const fx="display:flex;justify-content:space-between;align-items:center;gap:8px";
   if(adm()){const n=S.top.filter(x=>!S.rev[x.id]).length;return `<p class="hbal" onclick="go('wallet')" style="margin:0;font-size:14px;cursor:pointer;text-align:right">💰 ${n} add-money request${n===1?"":"s"} pending</p>`}
   return `<p class="hbal" onclick="go('wallet')" style="margin:0;font-size:14px;cursor:pointer;white-space:nowrap">💰 <b data-cnt="${bal(uid)}">${money(bal(uid))}</b></p>`}
+/* ---- HOME STAGE: character in the middle, option slots on the sides ---- */
+const LOCK_SVG='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+/* PLACEHOLDER green character. When your 3D character is ready, change ONLY this function
+   to return your <model-viewer> / <img> / <canvas> markup. Nothing else on the home screen needs to change. */
+function charHTML(){return '<div id="chr3d" class="chr3d">'+charSVG()+'</div>'}
+function charSVG(){return `<svg class="chr" viewBox="0 0 200 340" aria-label="Your character">
+<defs>
+<linearGradient id="gA" x1="0" x2="1"><stop offset="0" stop-color="#1f9d55"/><stop offset="1" stop-color="#6ee7a0"/></linearGradient>
+<linearGradient id="gB" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#34d27b"/><stop offset="1" stop-color="#0f6b3a"/></linearGradient>
+<linearGradient id="gC" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#14532d"/><stop offset="1" stop-color="#0a2e1a"/></linearGradient>
+</defs>
+<ellipse cx="100" cy="322" rx="62" ry="11" fill="rgba(0,0,0,.45)"/>
+<!-- legs -->
+<path d="M72 196h24l-2 104H70z" fill="url(#gC)"/><path d="M104 196h24l2 104h-24z" fill="url(#gC)"/>
+<path d="M62 296h36v20H58z" fill="#0b1f14"/><path d="M102 296h36l4 20h-40z" fill="#0b1f14"/>
+<path d="M62 308h36v8H58zM102 308h40v8h-40z" fill="#F5B82E"/>
+<!-- torso -->
+<path d="M62 100h76l10 100H52z" fill="url(#gB)"/>
+<path d="M82 100h36l-6 40h-24z" fill="#0f6b3a"/>
+<rect x="52" y="190" width="96" height="14" rx="4" fill="#F5B82E"/>
+<!-- arms -->
+<path d="M44 106l20-8 6 84-22 6z" fill="url(#gA)"/><path d="M156 106l-20-8-6 84 22 6z" fill="url(#gA)"/>
+<circle cx="52" cy="194" r="11" fill="#0b1f14"/><circle cx="148" cy="194" r="11" fill="#0b1f14"/>
+<!-- shoulders -->
+<circle cx="56" cy="104" r="16" fill="#34d27b"/><circle cx="144" cy="104" r="16" fill="#34d27b"/>
+<!-- neck + head -->
+<rect x="88" y="82" width="24" height="22" rx="6" fill="#0f6b3a"/>
+<path d="M62 58c0-26 16-42 38-42s38 16 38 42v18c0 12-10 20-38 20s-38-8-38-20z" fill="url(#gA)"/>
+<path d="M72 54h56c6 0 10 4 10 10v6c0 6-4 10-10 10H72c-6 0-10-4-10-10v-6c0-6 4-10 10-10z" fill="#08210f"/>
+<path d="M78 62h20" stroke="#6ee7a0" stroke-width="5" stroke-linecap="round"/>
+<path d="M100 16v26" stroke="#F5B82E" stroke-width="5" stroke-linecap="round"/>
+</svg>`}
+/* ---- 3D character: Iridescence model (optimised glb embedded in this page) ---- */
+const G3={};
+function init3d(){
+ if(G3.r||G3.failed)return;
+ if(!window.THREE||!THREE.GLTFLoader){G3.failed=true;return}
+ const T=THREE,r=new T.WebGLRenderer({antialias:true,alpha:true});
+ r.setClearColor(0,0);r.outputEncoding=T.sRGBEncoding;r.toneMapping=T.ACESFilmicToneMapping;r.toneMappingExposure=1.05;r.setPixelRatio(Math.min(devicePixelRatio||1,2));
+ const sc=new T.Scene(),cam=new T.PerspectiveCamera(30,1,.1,50),es=new T.Scene();
+ es.add(new T.Mesh(new T.BoxGeometry(60,60,60),new T.MeshBasicMaterial({color:new T.Color(.05,.06,.09),side:T.BackSide})));
+ [[[6,4.4,2.6],[14,18,16],14],[[.8,1.9,5],[-18,8,10],12],[[.5,2,6],[2,10,-22],14],[[5,3,1.5],[-3,26,2],10]].forEach(([c,p,z])=>{const m=new T.Mesh(new T.PlaneGeometry(z,z),new T.MeshBasicMaterial({color:new T.Color(...c),side:T.DoubleSide}));m.position.set(...p);m.lookAt(0,0,0);es.add(m)});
+ sc.environment=new T.PMREMGenerator(r).fromScene(es,.02).texture;
+ [[[1,.85,.6],1.6,[2,3,5]],[[.3,.55,1],.8,[-4,1,3]],[[.2,.45,1],1.4,[0,3,-4]]].forEach(([c,i,p])=>{const l=new T.DirectionalLight(new T.Color(...c),i);l.position.set(...p);sc.add(l)});
+ const g=new T.Group();sc.add(g);Object.assign(G3,{r,sc,cam,g,rot:0});
+ const bin=atob(((document.getElementById("glb64")||{}).textContent||window.YP_GLB||"").trim()),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+ new T.GLTFLoader().parse(u.buffer,"",gl=>{const m=gl.scene,bx=new T.Box3().setFromObject(m);m.position.sub(bx.getCenter(new T.Vector3()));G3.h=bx.max.y-bx.min.y;G3.w=bx.max.x-bx.min.x;
+  m.traverse(o=>{if(o.isMesh&&o.material&&o.material.map)o.material.map.anisotropy=4});g.add(m);G3.ready=true;
+  const s=G3.c&&G3.c.querySelector(".chr");if(s)s.remove();if(G3.c)fit3d(G3.c)},e=>{console.error(e);G3.failed=true});
+ const cv=r.domElement;
+ cv.addEventListener("pointerdown",e=>{G3.drag=true;G3.lx=e.clientX;try{cv.setPointerCapture(e.pointerId)}catch(_){}});
+ cv.addEventListener("pointermove",e=>{if(G3.drag){G3.rot+=(e.clientX-G3.lx)*.012;G3.lx=e.clientX}});
+ const up=()=>{G3.drag=false;G3.rel=performance.now()};cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
+}
+function fit3d(c){const r=G3.r;if(!r)return;const w=c.clientWidth||200,h=c.clientHeight||300,cam=G3.cam;r.setSize(w,h,false);cam.aspect=w/h;
+ const th=Math.tan(15*Math.PI/180),d=Math.max((G3.h||1.9)/2/th,(G3.w||1.56)/2/(th*cam.aspect))*1.06;cam.position.set(0,0,d);cam.lookAt(0,0,0);cam.updateProjectionMatrix()}
+function mount3d(){const c=document.getElementById("chr3d");if(!c)return;init3d();if(!G3.r)return;G3.c=c;c.appendChild(G3.r.domElement);
+ if(G3.ready){const s=c.querySelector(".chr");if(s)s.remove()}fit3d(c);if(!G3.on){G3.on=true;loop3d()}}
+function loop3d(){if(!G3.c||!document.body.contains(G3.r.domElement)){G3.on=false;return}requestAnimationFrame(loop3d);
+ if(!G3.ready||document.hidden)return;const n=performance.now();
+ if(!G3.drag&&n-(G3.rel||0)>1200){const tg=Math.round(G3.rot/(2*Math.PI))*2*Math.PI;G3.rot+=(tg-G3.rot)*.06}
+ G3.g.rotation.y=G3.rot+Math.sin(n/1800)*.05;G3.g.position.y=Math.sin(n/1400)*.012;G3.r.render(G3.sc,G3.cam)}
+addEventListener("resize",()=>{G3.c&&fit3d(G3.c)});
+function slotH(inner,cls){return `<div class="slot ${cls||""}">${inner}</div>`}
+function stageHTML(me){
+  const st0=me?statsFor(me):{wins:0,pts:0,played:0},nm=me?esc(me.ign):"Player";
+  const pct=Math.min(100,st0.pts%100);
+  return `<div class="stage">
+    <div class="sd sl1">${slotH('<small>Wins</small><b>'+st0.wins+'</b>',"wins")}</div>
+    <div class="sd sl2">${slotH(LOCK_SVG,"lock")}</div>
+    <div class="sd sr1">${slotH(LOCK_SVG,"lock")}</div>
+    <div class="sd sr2">${slotH(LOCK_SVG,"lock")}</div>
+    <div class="chrw">${charHTML()}</div>
+  </div>
+  <div class="pname">${nm}</div>
+  <div class="plvl"><i>${st0.played}</i><span><em style="width:${pct}%"></em></span></div>
+  <div class="bpn"><b>${st0.pts}</b><sup>BP</sup></div>
+  <div class="jwrap"><button class="join" onclick="go('matches')">Launch</button></div>`}
 function home(){const me=S.prof[uid];
   const ups=S.t.filter(t=>st(t)==="up").sort((a,b)=>new Date(a.when||0)-new Date(b.when||0)),live=S.t.filter(t=>st(t)==="live"),hero=live[0]||ups[0]||S.t[0];
   const rl=live.filter(t=>t!==hero),ru=ups.filter(t=>t!==hero);
   let h=`<div class="top"><h1 class="logo">👑 YAPPER</h1><div class="hdr">${themeBtn()}${roleBtn()}</div></div><div class="hrow"><div class="mu hwho">${me?avH(me,"sm")+'<span class="hnm">Hi, '+esc(me.ign)+' 👋</span>':"Welcome 👋"}</div>${balCard()}</div>`;
-  h+=hero?tCard(hero,{feat:true}):'<p class="mu">No tournaments yet.</p>';
-  if(rl.length)h+=`<div class="sh"><h2>${IC.clock}Live now</h2></div>`+rl.map(t=>tCard(t)).join("");
-  if(ru.length)h+=`<div class="sh"><h2>${IC.clock}Upcoming</h2><button class="va" onclick="go('matches')">View All ${IC.arrow}</button></div>`+ru.slice(0,3).map(t=>tCard(t)).join("");
-  return h}
+  return '<div class="hm">'+h+stageHTML(me)+'</div>'}
 function form(){return `<div class="card"><h2>Create tournament</h2><label>Title</label><input id="n_title" placeholder="Sunday Squad Showdown">
   <label>Date &amp; time</label><input id="n_when" type="datetime-local"><div class="row"><div><label>Map</label><select id="n_map"><option>Erangel</option><option>Miramar</option><option>Sanhok</option><option>Vikendi</option><option>Livik</option></select></div><div><label>Mode</label><select id="n_mode"><option>Solo</option><option>Duo</option><option selected>Squad</option></select></div></div>
   <div class="row"><div><label>Slots</label><input id="n_slots" type="number" value="25"></div><div><label>Entry fee (₹, 0 = free)</label><input id="n_fee" type="number" min="0" value="0"></div><div><label>Prize</label><input id="n_prize" placeholder="₹1000"></div></div><p><button class="p" onclick="createT()">Create</button></p></div>`}
@@ -680,7 +787,7 @@ function detail(){const t=S.t.find(x=>x.id===curT);if(!t){curT=null;return home(
 function render(f){if(!db)return;const a=document.activeElement,sc=$("#scr");
   if(!f&&a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&sc.contains(a)){pending=true;return}
   const top=sc.scrollTop;let h;try{h=curT?detail():({home,matches,board:boardV,wallet:walletV,profile:profV,settings:settingsV}[tab]||home)()}catch(e){console.error(e);h='<p class="mu">Something went wrong. Reload the page.</p>'}
-  const an=ANIM&&motionOK();ANIM=false;sc.classList.toggle("anim",an);sc.innerHTML=h;sc.scrollTop=top;
+  const an=ANIM&&motionOK();ANIM=false;sc.classList.toggle("anim",an);sc.innerHTML=h;sc.classList.toggle("nos",!curT&&tab==="home");sc.scrollTop=top;try{mount3d()}catch(e){console.error(e)}
   document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===(tab==="settings"?"profile":tab)));navInd();post(an);tick()}
 document.addEventListener("focusout",()=>{if(pending){pending=false;setTimeout(()=>render(),80)}});
 /* actions */
